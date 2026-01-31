@@ -90,12 +90,30 @@
             margin-top: 24px;
         }
 
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
         .section-title {
             font-size: 13px;
             color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 12px;
             text-transform: uppercase;
             letter-spacing: 1px;
+        }
+
+        .clear-btn {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .clear-btn:active {
+            color: #EC4899;
         }
 
         .history-list {
@@ -227,7 +245,10 @@
         </div>
 
         <div class="history-section">
-            <div class="section-title">发送历史</div>
+            <div class="history-header">
+                <div class="section-title">发送历史</div>
+                <button class="clear-btn" onclick="clearHistory()">清空</button>
+            </div>
             <div class="history-list" id="historyList">
                 <div class="history-empty">暂无记录</div>
             </div>
@@ -355,6 +376,14 @@
             input.value = history[i];
             input.focus();
             showToast('已恢复');
+        }
+
+        function clearHistory() {
+            if (history.length === 0) return;
+            history = [];
+            localStorage.removeItem('stardew_history');
+            updateHistory();
+            showToast('已清空');
         }
 
         function escapeHtml(t) {
