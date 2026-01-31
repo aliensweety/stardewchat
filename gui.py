@@ -262,15 +262,40 @@ def run_gui():
     )
     set_pwd_btn.pack(side='left', padx=(10, 0), ipadx=12, ipady=4)
     
-    # 提示
-    tip_label = tk.Label(
-        root,
-        text="请保持此窗口运行，最小化后可在托盘找到",
+    # 底部信息区
+    bottom_frame = tk.Frame(root, bg='#1a1a2e')
+    bottom_frame.pack(side='bottom', pady=10)
+    
+    # GitHub链接
+    github_label = tk.Label(
+        bottom_frame,
+        text="🌟 即将开源，敬请期待",
         font=("Microsoft YaHei", 9),
-        fg='#555',
+        fg='#666',
         bg='#1a1a2e'
     )
-    tip_label.pack(side='bottom', pady=15)
+    github_label.pack()
+    
+    github_link = tk.Label(
+        bottom_frame,
+        text="github.com/aliensweety",
+        font=("Consolas", 9),
+        fg='#8B5CF6',
+        bg='#1a1a2e',
+        cursor='hand2'
+    )
+    github_link.pack()
+    github_link.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/aliensweety"))
+    
+    # 提示
+    tip_label = tk.Label(
+        bottom_frame,
+        text="请保持此窗口运行，最小化后可在托盘找到",
+        font=("Microsoft YaHei", 8),
+        fg='#444',
+        bg='#1a1a2e'
+    )
+    tip_label.pack(pady=(8, 0))
     
     # 托盘图标
     tray_icon = create_tray_icon()
