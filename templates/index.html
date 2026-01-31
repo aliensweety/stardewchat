@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>星露谷Chat</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 16px;
+            color: #fff;
+        }
+
+        h1 {
+            font-family: 'VT323', monospace;
+            font-size: 32px;
+            background: linear-gradient(90deg, #8B5CF6, #EC4899, #F59E0B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+            letter-spacing: 2px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .input-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            background: transparent;
+            border: none;
+            font-size: 16px;
+            color: #fff;
+            resize: none;
+            outline: none;
+            margin-bottom: 12px;
+        }
+
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .btn-send {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+            transition: all 0.2s;
+        }
+
+        .btn-send:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .btn-send:disabled {
+            opacity: 0.5;
+        }
+
+        .history-section {
+            margin-top: 24px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .history-list {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .history-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-text {
+            flex: 1;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-right: 12px;
+        }
+
+        .history-btn {
+            padding: 6px 12px;
+            background: rgba(139, 92, 246, 0.2);
+            color: #8B5CF6;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .history-empty {
+            padding: 24px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+        }
+
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 200;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* 密码验证页面 */
+        .auth-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            z-index: 50;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-page.show {
+            display: flex;
+        }
+
+        .auth-box {
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .auth-box h2 {
+            font-family: 'VT323', monospace;
+            font-size: 28px;
+            color: #8B5CF6;
+            margin-bottom: 24px;
+        }
+
+        .auth-box input {
+            width: 100%;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 密码验证页面 -->
+    <div class="auth-page" id="authPage">
+        <div class="auth-box">
+            <h2>🔒 请输入密码</h2>
+            <input type="password" id="authPassword" placeholder="输入访问密码">
+            <button class="btn-send" onclick="verifyPassword()">验证</button>
+        </div>
+    </div>
+
+    <!-- 主页面 -->
+    <div class="container" id="mainPage">
+        <h1>🎮 星露谷Chat</h1>
+
+        <div class="input-card">
+            <textarea id="input" placeholder="输入要发送的对话..." autofocus></textarea>
+            <button class="btn-send" id="sendBtn" onclick="send()">发送到星露谷</button>
+        </div>
+
+        <div class="history-section">
+            <div class="section-title">发送历史</div>
+            <div class="history-list" id="historyList">
+                <div class="history-empty">暂无记录</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const input = document.getElementById('input');
+        const sendBtn = document.getElementById('sendBtn');
+        const historyList = document.getElementById('historyList');
+        const toast = document.getElementById('toast');
+        const authPage = document.getElementById('authPage');
+
+        let history = JSON.parse(localStorage.getItem('stardew_history') || '[]');
+
+        // 检查是否需要密码验证
+        async function checkAuth() {
+            const saved = localStorage.getItem('stardew_auth');
+            const savedTime = localStorage.getItem('stardew_auth_time');
+
+            // 检查是否在30天内验证过
+            if (saved && savedTime) {
+                const elapsed = Date.now() - parseInt(savedTime);
+                if (elapsed < 30 * 24 * 60 * 60 * 1000) {
+                    const res = await fetch('/api/password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'verify', password: saved })
+                    });
+                    const data = await res.json();
+                    if (data.success) { showMain(); return; }
+                }
+            }
+
+            // 检查是否设置了密码
+            const res = await fetch('/api/password');
+            const data = await res.json();
+            if (data.has_password) {
+                authPage.classList.add('show');
+            } else {
+                showMain();
+            }
+        }
+
+        function showMain() {
+            authPage.classList.remove('show');
+            updateHistory();
+        }
+
+        async function verifyPassword() {
+            const pwd = document.getElementById('authPassword').value;
+            const res = await fetch('/api/password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'verify', password: pwd })
+            });
+            const data = await res.json();
+            if (data.success) {
+                localStorage.setItem('stardew_auth', pwd);
+                localStorage.setItem('stardew_auth_time', Date.now().toString());
+                showMain();
+            } else {
+                showToast('密码错误');
+            }
+        }
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 1500);
+        }
+
+        async function send() {
+            const text = input.value.trim();
+            if (!text) { showToast('请输入文字'); return; }
+
+            sendBtn.disabled = true;
+            try {
+                const res = await fetch('/api/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    input.value = '';
+                    addToHistory(text);
+                    showToast('已发送 ✓');
+                } else {
+                    showToast(data.message || '发送失败');
+                }
+            } catch (e) {
+                showToast('网络错误');
+            } finally {
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        function addToHistory(text) {
+            if (history[0] !== text) {
+                history.unshift(text);
+                if (history.length > 20) history.pop();
+                localStorage.setItem('stardew_history', JSON.stringify(history));
+                updateHistory();
+            }
+        }
+
+        function updateHistory() {
+            if (history.length === 0) {
+                historyList.innerHTML = '<div class="history-empty">暂无记录</div>';
+            } else {
+                historyList.innerHTML = history.map((t, i) => `
+                    <div class="history-item">
+                        <div class="history-text">${escapeHtml(t)}</div>
+                        <button class="history-btn" onclick="restore(${i})">恢复</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function restore(i) {
+            input.value = history[i];
+            input.focus();
+            showToast('已恢复');
+        }
+
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+
+        // 回车发送
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+            }
+        });
+
+        checkAuth();
+    </script>
+</body>
+
+</html>

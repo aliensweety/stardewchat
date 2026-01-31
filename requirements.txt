@@ -1,0 +1,5 @@
+flask
+pywin32
+qrcode[pil]
+pystray
+pyinstaller
