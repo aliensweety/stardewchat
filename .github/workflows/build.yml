@@ -19,7 +19,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install flask pywin32 qrcode[pil] pystray pyinstaller
+          pip install flask pywin32 qrcode[pil] pystray pyinstaller pillow
       
       - name: Build EXE
         run: |
@@ -43,23 +43,32 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install flask qrcode[pil] pystray pyinstaller
-          pip install pyobjc-framework-Quartz pyobjc-framework-AppKit
+          pip install flask qrcode[pil] pyinstaller pillow
       
       - name: Build macOS App
         run: |
           pyinstaller --noconfirm --onefile --windowed --name "StardewChat" --add-data "templates:templates" gui_mac.py
       
+      - name: Make executable
+        run: chmod +x dist/StardewChat
+      
+      - name: Create zip for macOS
+        run: |
+          cd dist
+          zip -r StardewChat-macOS.zip StardewChat
+      
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: StardewChat-macOS
-          path: dist/StardewChat
+          path: dist/StardewChat-macOS.zip
 
   release:
     needs: [build-windows, build-macos]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
     steps:
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
@@ -78,7 +87,7 @@ jobs:
         with:
           files: |
             windows/StardewChat.exe
-            macos/StardewChat
+            macos/StardewChat-macOS.zip
           draft: false
           prerelease: false
         env:

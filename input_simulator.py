@@ -14,6 +14,8 @@ PLATFORM = sys.platform
 
 if PLATFORM == 'darwin':
     # macOS 实现
+    MACOS_AVAILABLE = False
+    
     try:
         from Quartz import (
             CGEventCreateKeyboardEvent,
@@ -22,83 +24,95 @@ if PLATFORM == 'darwin':
             CGEventSourceCreate,
             kCGEventSourceStateHIDSystemState,
             CGEventSetFlags,
-            kCGEventFlagMaskShift,
             kCGEventFlagMaskCommand
         )
-        from AppKit import NSWorkspace, NSRunningApplication
-        import Quartz
-        
+        from AppKit import NSWorkspace
         MACOS_AVAILABLE = True
     except ImportError:
-        MACOS_AVAILABLE = False
+        pass
     
     # macOS 键码映射
     KEY_T = 0x11
     KEY_RETURN = 0x24
     KEY_V = 0x09
-    KEY_SHIFT = 0x38
     KEY_COMMAND = 0x37
     
-    def press_key(keycode, flags=0):
-        """按下并释放一个键"""
-        source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState)
-        # 按下
-        event = CGEventCreateKeyboardEvent(source, keycode, True)
-        if flags:
-            CGEventSetFlags(event, flags)
-        CGEventPost(kCGHIDEventTap, event)
-        time.sleep(0.05)
-        # 释放
-        event = CGEventCreateKeyboardEvent(source, keycode, False)
-        CGEventPost(kCGHIDEventTap, event)
-        time.sleep(0.05)
-    
-    def press_key_t():
-        """按T键"""
-        press_key(KEY_T)
-    
-    def press_enter():
-        """按回车键"""
-        press_key(KEY_RETURN)
-    
-    def paste_text(text):
-        """复制文本到剪贴板并粘贴"""
-        # 使用pbcopy设置剪贴板
-        process = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
-        process.communicate(text.encode('utf-8'))
-        time.sleep(0.1)
+    if MACOS_AVAILABLE:
+        def press_key(keycode, flags=0):
+            """按下并释放一个键"""
+            source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState)
+            event = CGEventCreateKeyboardEvent(source, keycode, True)
+            if flags:
+                CGEventSetFlags(event, flags)
+            CGEventPost(kCGHIDEventTap, event)
+            time.sleep(0.05)
+            event = CGEventCreateKeyboardEvent(source, keycode, False)
+            CGEventPost(kCGHIDEventTap, event)
+            time.sleep(0.05)
         
-        # Command+V 粘贴
-        source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState)
-        event = CGEventCreateKeyboardEvent(source, KEY_V, True)
-        CGEventSetFlags(event, kCGEventFlagMaskCommand)
-        CGEventPost(kCGHIDEventTap, event)
-        time.sleep(0.05)
-        event = CGEventCreateKeyboardEvent(source, KEY_V, False)
-        CGEventPost(kCGHIDEventTap, event)
-        time.sleep(0.1)
-    
-    def find_stardew_window():
-        """查找星露谷窗口"""
-        workspace = NSWorkspace.sharedWorkspace()
-        apps = workspace.runningApplications()
-        for app in apps:
-            name = app.localizedName()
-            if name and ('Stardew' in name or '星露谷' in name):
-                return app
-        return None
-    
-    def activate_window(app):
-        """激活应用窗口"""
-        if app:
-            app.activateWithOptions_(0)
-            time.sleep(0.2)
-            return True
-        return False
+        def press_key_t():
+            press_key(KEY_T)
+        
+        def press_enter():
+            press_key(KEY_RETURN)
+        
+        def paste_text(text):
+            process = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
+            process.communicate(text.encode('utf-8'))
+            time.sleep(0.1)
+            source = CGEventSourceCreate(kCGEventSourceStateHIDSystemState)
+            event = CGEventCreateKeyboardEvent(source, KEY_V, True)
+            CGEventSetFlags(event, kCGEventFlagMaskCommand)
+            CGEventPost(kCGHIDEventTap, event)
+            time.sleep(0.05)
+            event = CGEventCreateKeyboardEvent(source, KEY_V, False)
+            CGEventPost(kCGHIDEventTap, event)
+            time.sleep(0.1)
+        
+        def find_stardew_window():
+            workspace = NSWorkspace.sharedWorkspace()
+            apps = workspace.runningApplications()
+            for app in apps:
+                name = app.localizedName()
+                if name and ('Stardew' in name or '星露谷' in name):
+                    return app
+            return None
+        
+        def activate_window(app):
+            if app:
+                app.activateWithOptions_(0)
+                time.sleep(0.2)
+                return True
+            return False
+    else:
+        # 备用实现：使用osascript
+        def press_key_t():
+            subprocess.run(['osascript', '-e', 'tell application "System Events" to keystroke "t"'], capture_output=True)
+        
+        def press_enter():
+            subprocess.run(['osascript', '-e', 'tell application "System Events" to keystroke return'], capture_output=True)
+        
+        def paste_text(text):
+            process = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
+            process.communicate(text.encode('utf-8'))
+            time.sleep(0.1)
+            subprocess.run(['osascript', '-e', 'tell application "System Events" to keystroke "v" using command down'], capture_output=True)
+        
+        def find_stardew_window():
+            result = subprocess.run(
+                ['osascript', '-e', 'tell application "System Events" to get name of every process whose name contains "Stardew"'],
+                capture_output=True, text=True
+            )
+            return result.stdout.strip() if result.stdout.strip() else None
+        
+        def activate_window(app_name):
+            if app_name:
+                subprocess.run(['osascript', '-e', f'tell application "{app_name}" to activate'], capture_output=True)
+                time.sleep(0.2)
+                return True
+            return False
     
     def get_current_input_source():
-        """获取当前输入法"""
-        # macOS暂时不处理输入法切换，游戏通常会正确接收
         return None
     
     def is_chinese_input(source):
