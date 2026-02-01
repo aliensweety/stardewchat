@@ -5,6 +5,7 @@ Stardew Valley Chat Tool
 """
 
 import os
+import sys
 import time
 import socket
 import ctypes
@@ -12,9 +13,39 @@ import win32api
 import win32con
 import win32gui
 import win32clipboard
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
+import base64
 
-app = Flask(__name__)
+# 获取应用根目录（支持PyInstaller打包）
+if getattr(sys, 'frozen', False):
+    # PyInstaller打包后的路径
+    BASE_DIR = sys._MEIPASS
+else:
+    # 开发环境路径
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+LOGO_DIR = os.path.join(BASE_DIR, 'assets', 'logo')
+TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
+
+app = Flask(__name__, template_folder=TEMPLATE_DIR)
+
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    """提供静态文件（logo图片等）"""
+    return send_from_directory(LOGO_DIR, filename)
+
+
+@app.route('/api/logo')
+def get_logo():
+    """返回base64编码的logo图片"""
+    logo_path = os.path.join(LOGO_DIR, 'logo_128.png')
+    try:
+        with open(logo_path, 'rb') as f:
+            logo_data = base64.b64encode(f.read()).decode('utf-8')
+        return jsonify({'logo': f'data:image/png;base64,{logo_data}'})
+    except Exception as e:
+        return jsonify({'logo': '', 'error': str(e)})
 
 
 def get_all_local_ips():

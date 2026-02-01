@@ -2,7 +2,7 @@
 cd /d "%~dp0"
 
 echo ==========================================
-echo   Stardew Chat - 打包EXE
+echo   StardewChat - 打包EXE
 echo ==========================================
 echo.
 
@@ -22,7 +22,9 @@ echo.
 echo [INFO] Building EXE...
 pyinstaller --noconfirm --onefile --windowed ^
     --name "StardewChat" ^
+    --icon "assets\logo\app_icon.ico" ^
     --add-data "templates;templates" ^
+    --add-data "assets;assets" ^
     gui.py
 
 echo.
