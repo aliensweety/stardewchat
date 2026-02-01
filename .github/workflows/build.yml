@@ -23,7 +23,7 @@ jobs:
       
       - name: Build EXE
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "StardewChat" --add-data "templates;templates" gui.py
+          pyinstaller --noconfirm --onefile --windowed --name "StardewChat" --icon "assets/logo/app_icon.ico" --add-data "templates;templates" --add-data "assets;assets" gui.py
       
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
@@ -47,7 +47,7 @@ jobs:
       
       - name: Build macOS App
         run: |
-          pyinstaller --noconfirm --onefile --windowed --name "StardewChat" --add-data "templates:templates" gui_mac.py
+          pyinstaller --noconfirm --onefile --windowed --name "StardewChat" --add-data "templates:templates" --add-data "assets:assets" gui_mac.py
       
       - name: Make executable
         run: chmod +x dist/StardewChat
